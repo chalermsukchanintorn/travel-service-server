@@ -1,10 +1,10 @@
 //ไฟล์ที่ทำงานหรือแมปกับ tableใน database
 //ไฟล์นี้ทำงานกับ traveller_tb
 const Sequelize = require("sequelize");
-const sequelize = require("./../db/db.js");
+const db = require("./../db/db.js");
 
 //สร้าง model เพื่อแมปกับตารางใน database
-const Traveller = sequelize.define("traveller_tb", 
+const Traveller = db.define("traveller_tb", 
     {
         travellerId:{
             type: Sequelize.INTEGER,

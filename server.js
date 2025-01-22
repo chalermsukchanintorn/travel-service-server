@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 5000;
 //ใช้ middleware ในการจัดการต่างๆ
 app.use(bodyParse.json()) //จัดการข้อมูลที่เป็น JSON
 app.use(cors()) //จัดการเรื่องการเรียกใช้งานข้ามโดเมน
+
 app.use("/traveller", travellerRoute)
 app.use("/travel", travelRoute)
 

@@ -1,6 +1,5 @@
 /*
     ไฟล์ที่ใช้ในการสร้าง web server  รวมถึงการใช้งาน middleware
-    และการจัดการเส้นทาง
 */
 
 //นำเข้าเพื่อเรียกใช้งาน module ต่างๆ ที่ต้องใช้งาน
@@ -12,7 +11,7 @@ const cors = require("cors"); //จัดการเรียกใช้งา
 const travellerRoute = require("./routes/traveller.route.js");
 const travelRoute = require("./routes/travel.route.js");
 
-//เรียกใช้งานไฟล์ .env เพื่อใช้งานค่าที่อยู่ในไฟล์ .env
+//เรียกใช้งานไฟล์ .env เพื่อใช้งานค่าที่กำหนดอยู่ในไฟล์ .env
 require("dotenv").config();
 
 //สร้าง web server
@@ -25,8 +24,13 @@ const PORT = process.env.PORT || 5000;
 //ใช้ middleware ในการจัดการต่างๆ
 //จัดการข้อมูลที่เป็น JSON
 app.use(bodyParse.json());
+//หรือใช้จัดการข้อมูลที่เป็น JSON แทนได้
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
 //จัดการเรื่องการเรียกใช้งานข้ามโดเมน
 app.use(cors());
+//การจัดการเส้นทางหรือกำหนดตัว endpoint ด้วย middleware
 //จัดการเส้นทางการเข้าถึง เพื่อทำงานกับ traveller_tb
 app.use("/traveller", travellerRoute);
 //จัดการเส้นทางการเข้าถึง เพื่อทำงานกับ travel_tb

@@ -105,7 +105,7 @@ exports.checkLoginTraveller = async (req, res) => {
 //         travellerId: req.params.travellerId,
 //       },
 //     });
-//     res.status(200).json({
+//     res.status(204).json({
 //       message: "Traveller updated successfully",
 //       data: result,
 //     });
@@ -132,7 +132,7 @@ exports.editTraveller = async (req, res) => {
         travellerId: req.params.travellerId,
       },
     });
-    res.status(200).json({
+    res.status(204).json({
       message: "Traveller updated successfully",
       data: result,
     });

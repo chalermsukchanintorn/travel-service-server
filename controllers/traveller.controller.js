@@ -7,6 +7,7 @@
 //นำเข้าเพื่อเรียกใช้งาน module ต่างๆ ที่ต้องใช้งาน
 const multer = require("multer"); //จัดการการอัปโหลดไฟล์
 const path = require("path"); //จัดการ path หรือตำแหน่งที่อยู่ของไฟล์
+const fs = require("fs"); //จัดการไฟล์
 
 //นำเข้า traveller.model.js เพื่อทำงานกับ traveller_tb
 const Traveller = require("./../models/traveller.model.js");
@@ -62,6 +63,7 @@ exports.createTraveller = async (req, res) => {
     };
 
     const result = await Traveller.create(data);
+
     res.status(201).json({
       message: "Traveller created successfully",
       data: result,
@@ -105,7 +107,7 @@ exports.checkLoginTraveller = async (req, res) => {
 //         travellerId: req.params.travellerId,
 //       },
 //     });
-//     res.status(204).json({
+//     res.status(200).json({
 //       message: "Traveller updated successfully",
 //       data: result,
 //     });
@@ -122,6 +124,21 @@ exports.editTraveller = async (req, res) => {
     };
     //กรณีมีการอัปโหลดรูปภาพมาจะแทนด้วยรูปภาพใหม่  แต่หากไม่มีการอัปโหลดรูปภาพมาจะเก็บค่าเดิมแทน
     if (req.file) {
+      // ค้นหาข้อมูลเดิมก่อนอัปเดต
+      const traveller = await Traveller.findOne({
+        where: { travellerId: req.params.travellerId },
+      });
+
+      // ลบไฟล์เดิมหากมีอยู่
+      if (traveller.travellerImage) {
+        const oldImagePath = path.join("images/traveller", traveller.travellerImage);
+        fs.unlink(oldImagePath, (err) => {
+          if (err && err.code !== "ENOENT") {
+            console.error("Failed to delete old image:", err);
+          }
+        });
+      }
+
       data.travellerImage = req.file.path.replace("images\\traveller\\", "");
     } else {
       delete data.travellerImage;
@@ -132,7 +149,7 @@ exports.editTraveller = async (req, res) => {
         travellerId: req.params.travellerId,
       },
     });
-    res.status(204).json({
+    res.status(200).json({
       message: "Traveller updated successfully",
       data: result,
     });

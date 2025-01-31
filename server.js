@@ -35,6 +35,9 @@ app.use(cors());
 app.use("/traveller", travellerRoute);
 //จัดการเส้นทางการเข้าถึง เพื่อทำงานกับ travel_tb
 app.use("/travel", travelRoute);
+//จัดการเส้นทางการเข้าถึงรูปภาพ
+app.use("/images/traveller", express.static("images/traveller"));
+app.use("/images/travel", express.static("images/travel"));
 
 //เทสการเรียกใช้งาน web server จาก client/user/ระบบอื่นๆ
 app.get("/", (req, res) => {

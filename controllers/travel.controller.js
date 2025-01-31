@@ -7,6 +7,7 @@
 //นำเข้าเพื่อเรียกใช้งาน module ต่างๆ ที่ต้องใช้งาน
 const multer = require("multer"); //จัดการการอัปโหลดไฟล์
 const path = require("path"); //จัดการ path หรือตำแหน่งที่อยู่ของไฟล์
+const fs = require("fs"); //จัดการไฟล์
 
 //นำเข้า travel.model.js เพื่อทำงานกับ travel_tb
 const Travel = require("./../models/travel.model.js");
@@ -40,6 +41,7 @@ exports.uploadTravel = multer({
 }).single("travelImage");
 
 //ฟังก์ชันเพิ่มข้อมูลลงในตาราง travel_tb
+//กรณีไม่มีการอัปโหลดไฟล์
 // exports.createTravel = async (req, res) => {
 //     try {
 //         const result = await Travel.create(req.body);
@@ -52,12 +54,14 @@ exports.uploadTravel = multer({
 //         res.status(500).json({ message: error.message });
 //     }
 // };
+//กรณีมีการอัปโหลดไฟล์ แต่จะเลือกรูปอัปโหลดหรือไม่เลือกก็ได้ก็จะเก็บค่าว่างแทน
 exports.createTravel = async (req, res) => {
   try {
     //ตัวแปรเก็บข้อมูลที่ส่งมากับข้อมูลรูปภาพที่จะเอาไปบันทึกใน Table
+    //ตรวจสอบหากไม่มีการอัปโหลดรูปมาจะเก็บค่าว่างแทน
     let data = {
       ...req.body,
-      travelImage: req.file.path.replace("images\\travel\\", ""),
+      travelImage: req.file ? req.file.path.replace("images\\travel\\", "") : "",
     };
 
     const result = await Travel.create(data);
@@ -72,9 +76,52 @@ exports.createTravel = async (req, res) => {
 };
 
 //ฟังก์ชันแก้ไขข้อมูลการเดินทางกับตาราง travel_tb
+//กรณีไม่มีการอัปโหลดไฟล์
 exports.editTravel = async (req, res) => {
   try {
     const result = await Travel.update(req.body, {
+      where: {
+        travelId: req.params.travelId,
+      },
+    });
+    res.status(200).json({
+      message: "Travel updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+//กรณีมีการอัปโหลดไฟล์ แต่จะเลือกรูปอัปโหลดเพื่อแก้ไข หรือไม่เลือกก็ได้ก็จะเก็บค่าเดิมแทน
+exports.editTravel = async (req, res) => {
+  //ตัวแปรเก็บข้อมูลที่ส่งมากับข้อมูลรูปภาพที่จะเอาไปบันทึกใน Table
+  let data = {
+    ...req.body,
+  };
+  //กรณีมีการอัปโหลดรูปภาพมาจะแทนด้วยรูปภาพใหม่  แต่หากไม่มีการอัปโหลดรูปภาพมาจะเก็บค่าเดิมแทน
+  if (req.file) {
+    // ค้นหาข้อมูลเดิมก่อนอัปเดต
+    const travel = await Travel.findOne({
+      where: { travelId: req.params.travelId },
+    });
+
+    // ลบไฟล์เดิมหากมีอยู่
+    if (travel.travelImage) {
+      const oldImagePath = path.join("images/travel", travel.travelImage);
+      fs.unlink(oldImagePath, (err) => {
+        if (err && err.code !== "ENOENT") {
+          console.error("Failed to delete old image:", err);
+        }
+      });
+    }
+
+    data.travelImage = req.file.path.replace("images\\travel\\", "");
+  } else {
+    delete data.travelImage;
+  }
+
+  try {
+    const result = await Travel.update(data, {
       where: {
         travelId: req.params.travelId,
       },

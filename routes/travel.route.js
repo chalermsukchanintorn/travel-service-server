@@ -20,6 +20,8 @@ router.put("/:travelId", travelCtrl.uploadTravel, travelCtrl.editTravel);
 
 router.get("/:travellerId", travelCtrl.getAllTravel);
 
+router.get("/only/:travelId", travelCtrl.getOnlyTravel);
+
 router.delete("/:travelId", travelCtrl.deleteTravel);
 
 //export router ออกไปเพื่อการเรียกใช้งาน

@@ -149,10 +149,19 @@ exports.editTraveller = async (req, res) => {
         travellerId: req.params.travellerId,
       },
     });
-    res.status(200).json({
-      message: "Traveller updated successfully",
-      data: result,
-    });
+
+    if(result){
+      const resultupdate = await Traveller.findOne({
+        where: { travellerId: req.params.travellerId },
+      });
+
+      res.status(200).json({
+        message: "Traveller updated successfully",
+        data: resultupdate,
+      });
+
+    }
+  
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

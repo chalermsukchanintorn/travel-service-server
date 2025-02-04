@@ -77,21 +77,21 @@ exports.createTravel = async (req, res) => {
 
 //ฟังก์ชันแก้ไขข้อมูลการเดินทางกับตาราง travel_tb
 //กรณีไม่มีการอัปโหลดไฟล์
-exports.editTravel = async (req, res) => {
-  try {
-    const result = await Travel.update(req.body, {
-      where: {
-        travelId: req.params.travelId,
-      },
-    });
-    res.status(200).json({
-      message: "Travel updated successfully",
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+// exports.editTravel = async (req, res) => {
+//   try {
+//     const result = await Travel.update(req.body, {
+//       where: {
+//         travelId: req.params.travelId,
+//       },
+//     });
+//     res.status(200).json({
+//       message: "Travel updated successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 //กรณีมีการอัปโหลดไฟล์ แต่จะเลือกรูปอัปโหลดเพื่อแก้ไข หรือไม่เลือกก็ได้ก็จะเก็บค่าเดิมแทน
 exports.editTravel = async (req, res) => {
   //ตัวแปรเก็บข้อมูลที่ส่งมากับข้อมูลรูปภาพที่จะเอาไปบันทึกใน Table
@@ -137,6 +137,21 @@ exports.editTravel = async (req, res) => {
 
 //ฟังก์ชันลบข้อมูลการเดินทางกับตาราง travel_tb
 exports.deleteTravel = async (req, res) => {
+  // ค้นหาข้อมูลเดิมเพื่อลบไฟล์
+  const travel = await Travel.findOne({
+    where: { travelId: req.params.travelId },
+  });
+
+  // ลบไฟล์หากมีอยู่
+  if (travel.travelImage) {
+    const oldImagePath = path.join("images/travel", travel.travelImage);
+    fs.unlink(oldImagePath, (err) => {
+      if (err && err.code !== "ENOENT") {
+        console.error("Failed to delete old image:", err);
+      }
+    });
+  }
+
   try {
     const result = await Travel.destroy({
       where: {
@@ -167,7 +182,30 @@ exports.getAllTravel = async (req, res) => {
       });
     } else {
       res.status(404).json({
-        message: "Traveller login failed",
+        message: "Travel get failed",
+        data: null,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getOnlyTravel = async (req, res) => {
+  try {
+    const result = await Travel.findOne({
+      where: {
+        travelId: req.params.travelId,
+      },
+    });
+    if (result) {
+      res.status(200).json({
+        message: "Travel get successfully",
+        data: result,
+      });
+    } else {
+      res.status(404).json({
+        message: "Travel get failed",
         data: null,
       });
     }

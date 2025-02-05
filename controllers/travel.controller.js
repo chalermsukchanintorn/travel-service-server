@@ -191,6 +191,7 @@ exports.getAllTravel = async (req, res) => {
   }
 };
 
+//ฟังก์ชันดึงข้อมูลการเดินทางหนึ่งๆ ของนักเดินทางจากตาราง travel_tb
 exports.getOnlyTravel = async (req, res) => {
   try {
     const result = await Travel.findOne({

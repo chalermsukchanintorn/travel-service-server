@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 5000;
 //ใช้ middleware ในการจัดการต่างๆ
 //จัดการข้อมูลที่เป็น JSON
 app.use(bodyParse.json());
-//หรือใช้จัดการข้อมูลที่เป็น JSON แทนได้
+//หรือใช้ express จัดการข้อมูลที่เป็น JSON แทนได้
 // app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
 

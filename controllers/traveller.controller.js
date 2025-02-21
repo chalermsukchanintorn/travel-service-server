@@ -15,10 +15,13 @@ const Traveller = require("./../models/traveller.model.js");
 //การอัปโหลดไฟล์
 //กำหนดค่าตำแหน่งที่อยู่ของไฟล์ และตั้งชื่อไฟล์ใหม่สำหรับไฟล์ที่อัปโหลดมา
 const storage = multer.diskStorage({
+  //กำหนดตำแหน่งที่อยู่ไฟล์
   destination: (req, file, cb) => {
     cb(null, "images/traveller");
   },
+  //ตั้งชื่อไฟล์ใหม่
   filename: (req, file, cb) => {
+    //ในที่นี้ชื่อไฟล์จะขึ้นต้นด้วย traveller_ ตามด้วยเลขสุ่มที่ได้จาก Math.random() คูณด้วย Date.now() และต่อด้วยนามสกุลไฟล์
     cb(null, "traveller_" + Math.floor(Math.random() * Date.now()) + path.extname(file.originalname));
   },
 });
@@ -150,7 +153,7 @@ exports.editTraveller = async (req, res) => {
       },
     });
 
-    if(result){
+    if (result) {
       const resultupdate = await Traveller.findOne({
         where: { travellerId: req.params.travellerId },
       });
@@ -159,9 +162,7 @@ exports.editTraveller = async (req, res) => {
         message: "Traveller updated successfully",
         data: resultupdate,
       });
-
     }
-  
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

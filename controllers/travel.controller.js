@@ -15,9 +15,11 @@ const Travel = require("./../models/travel.model.js");
 //การอัปโหลดไฟล์
 //กำหนดค่าตำแหน่งที่อยู่ของไฟล์ และตั้งชื่อไฟล์ใหม่สำหรับไฟล์ที่อัปโหลดมา
 const storage = multer.diskStorage({
+  //กำหนดตำแหน่งที่อยู่ไฟล์
   destination: (req, file, cb) => {
     cb(null, "images/travel");
   },
+  //ตั้งชื่อไฟล์ใหม่
   filename: (req, file, cb) => {
     //ในที่นี้ชื่อไฟล์จะขึ้นต้นด้วย travel_ ตามด้วยเลขสุ่มที่ได้จาก Math.random() คูณด้วย Date.now() และต่อด้วยนามสกุลไฟล์
     cb(null, "travel_" + Math.floor(Math.random() * Date.now()) + path.extname(file.originalname));

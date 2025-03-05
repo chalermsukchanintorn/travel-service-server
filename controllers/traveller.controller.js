@@ -5,6 +5,7 @@
 const multer = require("multer");
 const Traveller = require("./../models/traveller.model.js");
 const path = require("path");
+const fs = require("fs");
 
 //ฟังก์ชันเพิ่มข้อมูลลงในตาราง traveller_tb
 // exports.createTraveller = async (req, res) => {
@@ -23,10 +24,12 @@ exports.createTraveller = async (req, res) => {
         //ตัวแปรเก็บข้อมูลที่ส่งมากับข้อมูลรูปภาพที่จะเอาไปบันทึกใน Table
         let data = {
             ...req.body,
-            travellerImage: req.file.path.replace("images\\traveller\\", "")
+            //มีการตรวจสอบก่อนว่ามีไฟล์ที่อัปโหลดมาไหม
+            travellerImage: req.file ? req.file.path.replace("images\\traveller\\", "") : ""
         }
 
         const result = await Traveller.create(data);
+
         res.status(201).json({
             message: "Traveller created successfully",
             data: result
@@ -35,7 +38,6 @@ exports.createTraveller = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 //ฟังก์ชันตรวจสอบการเข้าใช้งานของผู้ใช้กับตาราง traveller_tb
 exports.checkLoginTraveller = async (req, res) => {
@@ -65,11 +67,44 @@ exports.checkLoginTraveller = async (req, res) => {
 //ฟังก์ชันแก้ไขข้อมูลส่วนตัวของผู้ใช้งานกับตาราง traveller_tb
 exports.editTraveller = async (req, res) => {
     try {
-        const result = await Traveller.update(req.body, {
+        //มีการตรวจสอบก่อนว่ามีไฟล์ที่อัปโหลดมาไหม 
+        //กรณีที่มี ตรวจสอบก่อนว่ามีไฟล์เก่าอยู่ก่อนหรือไม่ ถ้ามีให้ลบไฟล์เก่าทิ้งไปด้วย        
+        let data = {
+            ...req.body
+        }
+
+        if(req.file) { //ตรวจสอบว่ามีการอัปโหลดไฟล์มาเพื่อแก้ไขหรือไม่
+            const traveller = await Traveller.findOne({ //ไปค้นหาเพื่อเอารูป
+                where: {
+                    travellerId: req.params.travellerId
+                }
+            });
+
+            if(traveller.travellerImage) { //ตรวจสอบกรณีมีรูป
+                const oldImagePath = "images/traveller/" + traveller.travellerImage;
+                //ลบไฟล์รูปเก่าทิ้ง
+                fs.unlink(oldImagePath,(err) => {
+                    console.log(err);
+                });
+            }
+
+            data.travellerImage = req.file.path.replace("images\\traveller\\", "");
+        }else{
+            delete data.travellerImage
+        }
+
+        await Traveller.update(data, {
             where:{
                 travellerId: req.params.travellerId,
             }
         });
+
+        const result = await Traveller.findOne({
+            where: {
+                travellerId: req.params.travellerId,
+            } 
+        });
+
         res.status(200).json({
             message: "Traveller updated successfully",
             data: result

@@ -1,13 +1,20 @@
-//ไฟล์ที่เขียนควบคุมการทำงานต่างๆ กับ table ใน database
-//เช่น การเพิ่ม (insert/create) การแก้ไข (update)
-// การลบ (delete) การค้นหา,ตรวจสอบ,ดึง,ดู (select/sead)
+/*
+    ไฟล์ที่กำหนดการทำงานต่างๆ กับ table ใน database
+    เช่น การเพิ่ม (insert/create), การแก้ไข (update),
+    การลบ (delete), การค้นหา/ตรวจสอบ/ดึง/ดู (select/sead)
+*/
 
-const multer = require("multer");
+//นำเข้าเพื่อเรียกใช้งาน module ต่างๆ ที่ต้องใช้งาน
+const multer = require("multer"); //จัดการการอัปโหลดไฟล์
+const path = require("path"); //จัดการ path หรือตำแหน่งที่อยู่ของไฟล์
+const fs = require("fs"); //จัดการไฟล์
+
+//นำเข้า traveller.model.js เพื่อทำงานกับ traveller_tb
 const Traveller = require("./../models/traveller.model.js");
 const path = require("path");
-const fs = require("fs");
 
 //ฟังก์ชันเพิ่มข้อมูลลงในตาราง traveller_tb
+//กรณีไม่มีการอัปโหลดไฟล์
 // exports.createTraveller = async (req, res) => {
 //     try {
 //         const result = await Traveller.create(req.body);
@@ -19,17 +26,16 @@ const fs = require("fs");
 //         res.status(500).json({ message: error.message });
 //     }
 // };
+//กรณีมีการอัปโหลดไฟล์ แต่จะเลือกรูปอัปโหลดหรือไม่เลือกก็ได้ก็จะเก็บค่าว่างแทน
 exports.createTraveller = async (req, res) => {
     try {
         //ตัวแปรเก็บข้อมูลที่ส่งมากับข้อมูลรูปภาพที่จะเอาไปบันทึกใน Table
         let data = {
             ...req.body,
-            //มีการตรวจสอบก่อนว่ามีไฟล์ที่อัปโหลดมาไหม
-            travellerImage: req.file ? req.file.path.replace("images\\traveller\\", "") : ""
+            travellerImage: req.file.path.replace("images\\traveller\\", "")
         }
 
         const result = await Traveller.create(data);
-
         res.status(201).json({
             message: "Traveller created successfully",
             data: result
@@ -41,70 +47,54 @@ exports.createTraveller = async (req, res) => {
 
 //ฟังก์ชันตรวจสอบการเข้าใช้งานของผู้ใช้กับตาราง traveller_tb
 exports.checkLoginTraveller = async (req, res) => {
-    try {
-        const result = await Traveller.findOne({
-            where: {
-                travellerEmail: req.params.travellerEmail,
-                travellerPassword: req.params.travellerPassword
-            } 
-        });
-        if(result) {
-            res.status(200).json({
-                message: "Traveller login successfully",
-                data: result
-            });
-        }else{
-            res.status(404).json({
-                message: "Traveller login failed",
-                data: null
-            });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const result = await Traveller.findOne({
+      where: {
+        travellerEmail: req.params.travellerEmail,
+        travellerPassword: req.params.travellerPassword,
+      },
+    });
+    if (result) {
+      res.status(200).json({
+        message: "Traveller login successfully",
+        data: result,
+      });
+    } else {
+      res.status(404).json({
+        message: "Traveller login failed",
+        data: null,
+      });
     }
-}
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 //ฟังก์ชันแก้ไขข้อมูลส่วนตัวของผู้ใช้งานกับตาราง traveller_tb
+//กรณีไม่มีการอัปโหลดไฟล์
+// exports.editTraveller = async (req, res) => {
+//   try {
+//     const result = await Traveller.update(req.body, {
+//       where: {
+//         travellerId: req.params.travellerId,
+//       },
+//     });
+//     res.status(200).json({
+//       message: "Traveller updated successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+//กรณีมีการอัปโหลดไฟล์ แต่จะเลือกรูปอัปโหลดเพื่อแก้ไข หรือไม่เลือกก็ได้ก็จะเก็บค่าเดิมแทน
 exports.editTraveller = async (req, res) => {
     try {
-        //มีการตรวจสอบก่อนว่ามีไฟล์ที่อัปโหลดมาไหม 
-        //กรณีที่มี ตรวจสอบก่อนว่ามีไฟล์เก่าอยู่ก่อนหรือไม่ ถ้ามีให้ลบไฟล์เก่าทิ้งไปด้วย        
-        let data = {
-            ...req.body
-        }
-
-        if(req.file) { //ตรวจสอบว่ามีการอัปโหลดไฟล์มาเพื่อแก้ไขหรือไม่
-            const traveller = await Traveller.findOne({ //ไปค้นหาเพื่อเอารูป
-                where: {
-                    travellerId: req.params.travellerId
-                }
-            });
-
-            if(traveller.travellerImage) { //ตรวจสอบกรณีมีรูป
-                const oldImagePath = "images/traveller/" + traveller.travellerImage;
-                //ลบไฟล์รูปเก่าทิ้ง
-                fs.unlink(oldImagePath,(err) => {
-                    console.log(err);
-                });
-            }
-
-            data.travellerImage = req.file.path.replace("images\\traveller\\", "");
-        }else{
-            delete data.travellerImage
-        }
-
-        await Traveller.update(data, {
+        const result = await Traveller.update(req.body, {
             where:{
                 travellerId: req.params.travellerId,
             }
         });
-
-        const result = await Traveller.findOne({
-            where: {
-                travellerId: req.params.travellerId,
-            } 
-        });
-
         res.status(200).json({
             message: "Traveller updated successfully",
             data: result
